@@ -19,12 +19,12 @@ def createTrailerPage(rss):
 
     with open('newest_720p.html', 'wt') as f:
         # f.flush()
-        f.write('<html><head><title>this is the title</title></head><body>')
+        f.write('<html><head><title>Moie Trailers</title></head><body>')
 
     for movie in rss['records']['movieinfo']:
         title = movie['info']['title']
         url = movie['preview']['large']['#text']
-        thumb = movie['poster']['location']
+        thumb = movie['poster']['xlarge']
 
         with open('newest_720p.html', 'a') as f:
 
