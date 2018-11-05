@@ -1,5 +1,8 @@
 import xmltodict
 import requests
+import boto3
+
+output_filename = '/tmp/newest_720p.html'
 
 
 def loadRSS(url):
@@ -17,7 +20,7 @@ def createTrailerPage(rss):
 
     rss = loadRSS(rss)
 
-    with open('newest_720p.html', 'wt') as f:
+    with open(output_filename, 'wt') as f:
         # f.flush()
         f.write('<html><head><title>Moie Trailers</title></head><body>')
 
@@ -26,12 +29,29 @@ def createTrailerPage(rss):
         url = movie['preview']['large']['#text']
         thumb = movie['poster']['xlarge']
 
-        with open('newest_720p.html', 'a') as f:
+        with open(output_filename, 'a') as f:
 
-            f.write('<a href="' + url + '"><img src="' + thumb + '" title="' + title + '"></a>')
-    with open('newest_720p.html', 'a') as f:
+            f.write('<a href="' + url + '" type="video/x-msvideo"><img src="' + thumb + '" title="' + title + '"></a>')
+    with open(output_filename, 'a') as f:
         f.write('</body></html>')
         f.close()
 
 
-createTrailerPage('https://trailers.apple.com/trailers/home/xml/newest_720p.xml')
+def uploadS3():
+    # Create an S3 client
+    s3 = boto3.client('s3')
+
+    bucket_name = 'apple-trailers'
+
+    # Uploads the given file using a managed uploader, whic+-h will split up large
+    # files automatically and upload parts in parallel.
+    s3.upload_file(output_filename, bucket_name, 'index.html', ExtraArgs={'ACL': 'public-read', 'ContentType': 'text/html'})
+
+
+def lambda_handler(event="", context=""):
+
+    createTrailerPage('https://trailers.apple.com/trailers/home/xml/newest_720p.xml')
+    uploadS3()
+
+
+lambda_handler()
